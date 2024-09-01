@@ -69,6 +69,39 @@ void readNext_sim808(char *buffer = buffer, size_t size = BUFFER_SIZE, uint16_t 
   }
 }
 
+void readNext_sim808_silent(char *buffer = buffer, size_t size = BUFFER_SIZE, uint16_t timeout = 500, char stop = 0) {
+  size_t i = 0;
+  bool exit = false;
+  memset(buffer, 0, BUFFER_SIZE);
+  // Serial.println("odczytywanie...");
+
+  do {
+    while (!exit && i < size - 1 && Serial1.available()) {
+      char c = Serial1.read();
+      buffer[i] = c;
+      i++;
+
+      exit |= stop && c == stop;
+    }
+
+    if (timeout) {
+      if (timeout) {
+        delay(1);
+        (timeout)--;
+      }
+
+      if (!(timeout)) break;
+    }
+  } while (!exit && i < size - 1);
+
+  buffer[i] = '\0';
+
+  if (i) {
+    // Serial.print(F("<--"));
+    // Serial.print(buffer);
+  }
+}
+
 void blink_for_ready(){
   digitalWrite(2, HIGH);
   digitalWrite(3, HIGH);
@@ -143,27 +176,42 @@ void setup() {
   delay(2000);
   digitalWrite(SIM_PWR, LOW);
 
+
   delay(2000);
-  Serial1.print("AT+CGPSPWR=1\n");
-  Serial.print("AT+CGPSPWR=1\n");
+  Serial1.print("AT+CGNSPWR=1\n");
+  Serial.print("AT+CGNSPWR=1\n");
   readNext_sim808();
+  
   delay(2000);
-  Serial1.print("AT+CGNSTST=1\n");
-  Serial.print("AT+CGNSTST=1\n");
-  readNext_sim808();
-  delay(4000);
-  Serial1.print("AT+CGNSCMD=0,\"$PMTK220,20*2C\"\n");
-  Serial.print("AT+CGNSCMD=0,\"$PMTK220,20*2C\"\n");
-  readNext_sim808();
-  delay(4000);
-  Serial1.print("AT+CGNSTST=0\n");
-  Serial.print("AT+CGNSTST=0\n");
-  readNext_sim808();
-  delay(2000);
-  Serial1.print("AT+CGPSSTATUS?\n");
-  Serial.print("AT+CGPSSTATUS?\n");
+  Serial1.print("AT+CGNSSEQ=\"RMC\"\n");
+  Serial.print("AT+CGNSSEQ=\"RMC\"\n");
   readNext_sim808();
 
+  delay(2000);
+  Serial1.print("AT+CGNSCMD=1,\"24504D544B3030302A33320D0A\"\n");
+  Serial.print("AT+CGNSCMD=1,\"24504D544B3030302A33320D0A\"\n");
+  readNext_sim808();
+
+  // tcp must be on 
+  for(;;)
+  {
+    delay(2000);
+    Serial1.print("AT+CGPSSTATUS?\n");
+    Serial.print("AT+CGPSSTATUS?\n");
+    readNext_sim808();
+
+    if(strstr(buffer,"Location Not Fix") == NULL)
+    {
+      Serial.println("Location found!");
+      break;
+    }
+    else
+    {
+      Serial.println("Searching for location...");
+    }
+  }
+}
+void atach_tcp(){
   delay(2000);
   Serial1.print("AT\n");
   Serial.print("AT\n");
@@ -181,10 +229,10 @@ void setup() {
   Serial.print("AT+CIFSR\n");
   readNext_sim808();
   delay(5000);
-  Serial1.print("AT+CIPSTART=\"TCP\",\"*ip*\",\"*port*\"\n");
-  Serial.print("AT+CIPSTART=\"TCP\",\"*ip*\",\"*port*\"\n");
+  Serial1.print("AT+CIPSTART=\"TCP\",\"<ip>\",\"<port>\"\n");
+  Serial.print("AT+CIPSTART=\"TCP\",\"<ip>\",\"<port>\"\n");
   readNext_sim808();
-  }
+}
 
 void loop() {
 
@@ -192,6 +240,7 @@ void loop() {
     readNext();
     if (buffer[0] == '9') {
       Serial.println("koniec kontroli");
+      atach_tcp();
       break;
     }
     delay(1000);
@@ -203,5 +252,6 @@ void loop() {
     delay(2000);
     readNext_sim808();
     parse_location_send_via_tcp();
+    readNext_sim808();
   }
 }
