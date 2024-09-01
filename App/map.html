@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_b353e476a71aa4548c08815ae2c17c20 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-realtime/2.2.0/leaflet-realtime.js"></script>
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_b353e476a71aa4548c08815ae2c17c20" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_b353e476a71aa4548c08815ae2c17c20 = L.map(
+                "map_b353e476a71aa4548c08815ae2c17c20",
+                {
+                    center: [0.0, 0.0],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 1,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_ccb1e2f06950330a4a5df211e4efdfce = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detectRetina": false, "maxNativeZoom": 19, "maxZoom": 19, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+        
+    
+            tile_layer_ccb1e2f06950330a4a5df211e4efdfce.addTo(map_b353e476a71aa4548c08815ae2c17c20);
+        
+    
+            var realtime_3228d86aac56cb322abd3a81e71e96cd_options = {"interval": 3000, "removeMissing": false, "start": true};
+            
+
+            var realtime_3228d86aac56cb322abd3a81e71e96cd = new L.realtime(
+            
+    function(responseHandler, errorHandler) {
+        var url = '/home/michal/Development/Gps_positioning_system_app/coordinates.json';
+
+        fetch(url)
+        .then((response) => {
+            return response.json().then((data) => {
+                var { id, longitude, latitude } = data;
+
+                return {
+                    'type': 'FeatureCollection',
+                    'features': [{
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [longitude, latitude]
+                        },
+                        'properties': {
+                            'id': id
+                        }
+                    }]
+                };
+            })
+        })
+        .then(responseHandler)
+        .catch(errorHandler);
+    }
+,
+            realtime_3228d86aac56cb322abd3a81e71e96cd_options
+            );
+            map_b353e476a71aa4548c08815ae2c17c20.addLayer(
+                realtime_3228d86aac56cb322abd3a81e71e96cd._container);
+
+                var lat_lng_popup_1896a35840fee678ddb13d2757cbaf75 = L.popup();
+
+               
+                function latLngPop(e) {
+                    lat_lng_popup_1896a35840fee678ddb13d2757cbaf75
+                        .setLatLng(e.latlng)
+                        .setContent(`
+                            lat: ${e.latlng.lat}, lng: ${e.latlng.lng}
+                            <button id ="sendButton" onClick="
+                            ">
+                                Send coordinates
+                            </button>
+                            
+                        `)
+                        .openOn(map_b353e476a71aa4548c08815ae2c17c20);
+
+                        document.getElementById('sendButton').addEventListener('click', function() {
+                    // Define the data to be saved
+                    const data = "{lat: " + e.latlng.lat+", lng:"+ e.latlng.lng+"}";
+
+                    // Create a Blob object with the data
+                    const blob = new Blob([data], { type: 'text/plain' });
+
+                    // Create a link element
+                    const a = document.createElement('a');
+
+                    // Set the download attribute with the desired file name
+                    a.download = 'requested_cords.json';
+
+                    // Create a URL for the Blob and set it as the href attribute
+                    a.href = URL.createObjectURL(blob);
+
+                    // Append the link to the document
+                    document.body.appendChild(a);
+
+                    // Programmatically click the link to trigger the download
+                    a.click();
+
+                    // Remove the link from the document
+                    document.body.removeChild(a);
+                });
+            }
+
+            map_b353e476a71aa4548c08815ae2c17c20.on('click', latLngPop);
+</script>
+</html>
